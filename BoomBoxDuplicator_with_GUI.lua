@@ -17,6 +17,7 @@ local GUI_SETTINGS = {
 -- Create ScreenGui
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "BoomBoxDuplicatorGUI"
+ScreenGui.ResetOnSpawn = false -- IMPORTANT: Keep GUI visible after character reset/death
 ScreenGui.Parent = PlayerGui
 
 -- Create Main Frame
@@ -156,11 +157,21 @@ ConsoleFrame.Size = UDim2.new(1, 0, 0, 80)
 ConsoleFrame.BackgroundColor3 = GUI_SETTINGS.BorderColor
 ConsoleFrame.Parent = MainFrame
 
+local ScrollBar = Instance.new("ScrollingFrame")
+ScrollBar.Name = "ScrollBar"
+ScrollBar.Size = UDim2.new(1, 0, 1, 0)
+ScrollBar.CanvasSize = UDim2.new(0, 0, 0, 0) -- Will be updated dynamically
+ScrollBar.BackgroundTransparency = 1 -- Make background transparent to show ConsoleFrame's color
+ScrollBar.ScrollBarImageColor3 = GUI_SETTINGS.TextColor -- Make scrollbar visible
+ScrollBar.ScrollBarThickness = 6
+ScrollBar.Parent = ConsoleFrame
+
 local ConsoleOutput = Instance.new("TextLabel")
 ConsoleOutput.Name = "ConsoleOutput"
-ConsoleOutput.Size = UDim2.new(1, 0, 1, 0)
+ConsoleOutput.Size = UDim2.new(1, 0, 0, 0) -- Height will be dynamic based on content
 ConsoleOutput.Position = UDim2.new(0, 0, 0, 0)
 ConsoleOutput.BackgroundColor3 = GUI_SETTINGS.BorderColor
+ConsoleOutput.BackgroundTransparency = 1 -- Make background transparent
 ConsoleOutput.TextColor3 = GUI_SETTINGS.TextColor
 ConsoleOutput.Font = GUI_SETTINGS.Font
 ConsoleOutput.FontSize = Enum.FontSize.Size14
@@ -168,19 +179,12 @@ ConsoleOutput.Text = ""
 ConsoleOutput.TextXAlignment = Enum.TextXAlignment.Left
 ConsoleOutput.TextYAlignment = Enum.TextYAlignment.Top
 ConsoleOutput.TextWrapped = true
-ConsoleOutput.Parent = ConsoleFrame
-
-local ScrollBar = Instance.new("ScrollingFrame")
-ScrollBar.Name = "ScrollBar"
-ScrollBar.Size = UDim2.new(1, 0, 1, 0)
-ScrollBar.CanvasSize = UDim2.new(0, 0, 0, 0) -- Will be updated dynamically
-ScrollBar.BackgroundColor3 = GUI_SETTINGS.BorderColor
-ScrollBar.Parent = ConsoleFrame
-
-ConsoleOutput.Parent = ScrollBar
+ConsoleOutput.Parent = ScrollBar -- ConsoleOutput is now a child of ScrollBar
 
 local function logMessage(message: string)
     ConsoleOutput.Text = ConsoleOutput.Text .. "\n" .. message
+    -- Update ConsoleOutput size to fit content
+    ConsoleOutput.Size = UDim2.new(1, 0, 0, ConsoleOutput.TextBounds.Y)
     -- Auto-scroll to bottom
     ScrollBar.CanvasSize = UDim2.new(0, 0, 0, ConsoleOutput.TextBounds.Y)
     ScrollBar.CanvasPosition = Vector2.new(0, ConsoleOutput.TextBounds.Y - ScrollBar.AbsoluteSize.Y)
@@ -227,7 +231,7 @@ local function dupeBoombox(amountToDupe, getfenvEnabled)
             task.wait(0.2)
             if tool:FindFirstChild("Handle") then
                 local handle = tool.Handle
-                -- Position the handle near the player's root
+                -- Position the handle near the player\'s root
                 handle.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame + Vector3.new(0, 2, 0)
                 tool.Parent = workspace
                 logMessage("[✔] Dropped BoomBox.")
